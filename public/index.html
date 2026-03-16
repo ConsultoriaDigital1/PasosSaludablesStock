@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stockmanager | Repuestos de motos</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="auth-shell" class="auth-shell">
+      <div class="auth-card">
+        <div class="auth-copy">
+          <img class="auth-logo" src="/assets/logo-RM.svg" alt="Repuestos Mendez" />
+          <p class="eyebrow">Acceso al mostrador</p>
+          <h1>Iniciar sesion</h1>
+          <p class="section-copy">Entrá con el usuario del local para operar inventario, movimientos y caja.</p>
+        </div>
+        <form id="login-form" class="stack auth-form">
+          <label>
+            <span>Usuario</span>
+            <input id="login-username" autocomplete="username" required />
+          </label>
+          <label>
+            <span>Contraseña</span>
+            <input id="login-password" type="password" autocomplete="current-password" required />
+          </label>
+          <p id="login-error" class="auth-error" hidden></p>
+          <button type="submit" class="primary">Entrar</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="app-shell" class="app-shell" hidden>
+      <aside class="sidebar">
+        <div class="brand">
+          <img class="brand-logo" src="/assets/logo-RM.svg" alt="Repuestos Mendez" />
+          <p class="eyebrow">Repuestos de motos</p>
+        </div>
+
+        <nav class="nav">
+          <button class="nav-link is-active" data-view-target="dashboard">Mostrador</button>
+          <button class="nav-link" data-view-target="inventory">Inventario</button>
+          <button class="nav-link" data-view-target="output">Movimientos</button>
+          <button class="nav-link" data-view-target="stats">Estadisticas</button>
+          <button class="nav-link" data-view-target="treasury">Caja</button>
+        </nav>
+
+        <div class="sidebar-footer panel">
+          <div class="status-row">
+            <span class="status-dot"></span>
+            <strong id="health-label">Revisando base...</strong>
+          </div>
+          <p id="health-detail">Esperando respuesta del servidor.</p>
+          <p id="session-user" class="session-user" hidden></p>
+          <button type="button" id="logout-button" class="ghost sidebar-logout">Cerrar sesion</button>
+        </div>
+      </aside>
+
+      <div class="main-shell">
+        <header class="topbar">
+          <div class="topbar-heading">
+            <p class="eyebrow">Panel de mostrador</p>
+            <h2 id="view-title">Mostrador</h2>
+            <p id="view-copy" class="topbar-copy">Vista general del negocio, sin maquillaje ni efectos raros.</p>
+          </div>
+          <div class="topbar-metrics">
+            <article class="mini-card">
+              <span>Items</span>
+              <strong id="metric-products">0</strong>
+            </article>
+            <article class="mini-card">
+              <span>Unidades</span>
+              <strong id="metric-stock">0</strong>
+            </article>
+            <article class="mini-card warning">
+              <span>Caja</span>
+              <strong id="metric-balance">$0</strong>
+            </article>
+          </div>
+        </header>
+
+        <main class="views">
+          <section class="view is-visible" data-view="dashboard">
+            <div class="hero panel">
+              <div class="hero-copy">
+                <p class="eyebrow">Resumen general</p>
+                <h3>Lo importante primero</h3>
+                <p class="section-copy">
+                  Inventario, caja y actividad reciente con foco en repuestos de motos. Si una linea se queda corta o la caja se tuerce, se ve aca.
+                </p>
+              </div>
+              <div class="hero-side">
+                <span class="hero-kicker">Rubros del dia</span>
+                <div class="hero-tags">
+                  <span>Pastillas</span>
+                  <span>Kit transmision</span>
+                  <span>Aceite</span>
+                  <span>Baterias</span>
+                </div>
+                <p class="hero-note">Mas taller y mostrador. Menos interfaz pretendiendo ser una cabina futurista.</p>
+              </div>
+            </div>
+
+            <div class="dashboard-grid">
+              <article class="stat-card panel">
+                <span class="stat-label">Valor de mercaderia</span>
+                <strong id="dash-inventory-value">$0</strong>
+                <p>Lectura rapida del stock valorizado. Sirve para orientarte, no para cerrar balances.</p>
+              </article>
+              <article class="stat-card panel">
+                <span class="stat-label">Salidas 7 dias</span>
+                <strong id="dash-recent-units">0</strong>
+                <p>Unidades que ya salieron del local en la ultima semana.</p>
+              </article>
+              <article class="stat-card panel">
+                <span class="stat-label">Ingresos del mes</span>
+                <strong id="dash-income">$0</strong>
+                <p>Ventas, cobros y aportes registrados hasta ahora.</p>
+              </article>
+              <article class="stat-card panel danger">
+                <span class="stat-label">Egresos del mes</span>
+                <strong id="dash-expense">$0</strong>
+                <p>Compras, impuestos, gastos y retiros cargados en el periodo.</p>
+              </article>
+            </div>
+
+            <div class="two-col">
+              <article class="panel chart-card">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Caja</p>
+                    <h3>Flujo mensual</h3>
+                  </div>
+                </div>
+                <div id="finance-chart" class="chart chart-bars"></div>
+              </article>
+              <article class="panel chart-card">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Gastos</p>
+                    <h3>Distribucion por rubro</h3>
+                  </div>
+                </div>
+                <div id="expense-chart" class="chart chart-stack"></div>
+              </article>
+            </div>
+
+            <div class="two-col">
+              <article class="panel">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Actividad</p>
+                    <h3>Ultimos movimientos</h3>
+                  </div>
+                </div>
+                <ul id="dashboard-movements" class="list"></ul>
+              </article>
+              <article class="panel">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Caja</p>
+                    <h3>Ultimas transacciones</h3>
+                  </div>
+                </div>
+                <ul id="dashboard-transactions" class="list"></ul>
+              </article>
+            </div>
+          </section>
+
+          <section class="view" data-view="inventory">
+            <div class="section-head section-head-gap inventory-toolbar">
+              <div>
+                <p class="eyebrow">Catalogo</p>
+                <h3>Inventario de repuestos</h3>
+              </div>
+              <div class="inventory-actions">
+                <button type="button" id="open-product-modal" class="primary">Nuevo repuesto</button>
+              </div>
+            </div>
+
+            <article class="panel inventory-search-panel">
+              <div>
+                <p class="eyebrow">Busqueda rapida</p>
+                <h3>Busca por pieza sin perder de vista el inventario</h3>
+                <p class="section-copy">La busqueda manda primero. El alta de repuestos ahora sale en popup para no romper la lectura de la tabla.</p>
+              </div>
+              <div class="filters filters-inventory">
+                <div class="search-shell">
+                  <span class="search-label">Busqueda por pieza</span>
+                  <input id="search-input" type="search" placeholder="Buscar por nombre, descripcion o rubro" />
+                </div>
+                <label class="inventory-filter">
+                  <span class="search-label">Filtrar por rubro</span>
+                  <select id="category-filter">
+                    <option value="">Todos los rubros</option>
+                  </select>
+                </label>
+              </div>
+            </article>
+
+            <article class="panel inventory-table-panel">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Repuesto</th>
+                      <th>Rubro</th>
+                      <th>Precio</th>
+                      <th>Stock</th>
+                      <th>Estado</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="products-table"></tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+
+          <section class="view" data-view="output">
+            <div class="section-head section-head-gap">
+              <div>
+                <p class="eyebrow">Stock</p>
+                <h3>Movimientos de mercaderia</h3>
+              </div>
+              <p class="section-copy">Arma una venta completa o un ajuste sin cargar todo a ciegas y sin perder el total.</p>
+            </div>
+
+            <div class="split-grid movement-grid">
+              <article class="panel movement-builder-panel">
+                <div class="section-head movement-builder-head">
+                  <div>
+                    <p class="eyebrow">Operacion guiada</p>
+                    <h3>Venta o ajuste de stock</h3>
+                  </div>
+                  <label class="movement-type-shell">
+                    <span>Tipo</span>
+                    <select id="movement-type" required>
+                      <option value="SALE">Venta</option>
+                      <option value="OUT">Salida</option>
+                      <option value="IN">Entrada</option>
+                    </select>
+                  </label>
+                </div>
+                <form id="movement-form" class="stack">
+                  <div class="movement-assist panel-subtle">
+                    <p id="movement-intro" class="movement-intro">Carga varios repuestos en una sola venta y el sistema calcula el total antes de guardar.</p>
+                  </div>
+                  <div class="movement-lines-head">
+                    <strong>Repuestos del movimiento</strong>
+                    <button type="button" id="add-movement-line" class="ghost">Agregar repuesto</button>
+                  </div>
+                  <div id="movement-lines" class="movement-lines"></div>
+                  <div class="movement-summary">
+                    <article class="movement-stat">
+                      <span>Lineas</span>
+                      <strong id="movement-line-count">0</strong>
+                    </article>
+                    <article class="movement-stat">
+                      <span>Unidades</span>
+                      <strong id="movement-total-quantity">0</strong>
+                    </article>
+                    <article class="movement-stat accent">
+                      <span>Total</span>
+                      <strong id="movement-total-amount">$0</strong>
+                    </article>
+                  </div>
+                  <div class="form-grid movement-meta-grid">
+                    <label>
+                      <span>Cantidad inicial</span>
+                      <input id="movement-default-quantity" type="number" min="1" step="1" value="1" />
+                    </label>
+                    <label>
+                      <span>Motivo</span>
+                      <input id="movement-reason" placeholder="Venta, ajuste, reposicion" required />
+                    </label>
+                  </div>
+                  <div class="form-grid movement-meta-grid">
+                    <label id="movement-payment-shell">
+                      <span>Medio de cobro</span>
+                      <input id="movement-payment-method" placeholder="Efectivo, transferencia, tarjeta" />
+                    </label>
+                    <label id="movement-reference-shell">
+                      <span>Referencia</span>
+                      <input id="movement-reference" placeholder="Ticket, cliente o comprobante" />
+                    </label>
+                  </div>
+                  <label>
+                    <span>Nota</span>
+                    <textarea id="movement-note" rows="4" placeholder="Detalle opcional"></textarea>
+                  </label>
+                  <button type="submit" class="primary">Registrar movimiento</button>
+                </form>
+              </article>
+
+              <article class="panel movement-history-panel">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Historial</p>
+                    <h3>Ultimos movimientos</h3>
+                  </div>
+                </div>
+                <ul id="movement-log" class="list"></ul>
+              </article>
+            </div>
+          </section>
+
+          <section class="view" data-view="stats">
+            <div class="section-head section-head-gap">
+              <div>
+                <p class="eyebrow">Lectura de stock</p>
+                <h3>Estadisticas del taller</h3>
+              </div>
+            </div>
+
+            <div class="dashboard-grid">
+              <article class="stat-card panel">
+                <span class="stat-label">Promedio por repuesto</span>
+                <strong id="stat-average-stock">0</strong>
+                <p>Media de unidades por item cargado.</p>
+              </article>
+              <article class="stat-card panel">
+                <span class="stat-label">Rubros activos</span>
+                <strong id="stat-categories">0</strong>
+                <p>Cantidad de rubros con productos visibles.</p>
+              </article>
+              <article class="stat-card panel warning">
+                <span class="stat-label">Stock critico</span>
+                <strong id="stat-low-stock">0</strong>
+                <p>Productos con cinco unidades o menos.</p>
+              </article>
+              <article class="stat-card panel">
+                <span class="stat-label">Movimientos 14 dias</span>
+                <strong id="stat-movements">0</strong>
+                <p>Entradas y salidas registradas recientemente.</p>
+              </article>
+            </div>
+
+            <div class="two-col">
+              <article class="panel chart-card">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Stock por rubro</p>
+                    <h3>Distribucion</h3>
+                  </div>
+                </div>
+                <div id="category-chart" class="chart chart-bars"></div>
+              </article>
+              <article class="panel chart-card">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Movimiento</p>
+                    <h3>Entradas vs salidas</h3>
+                  </div>
+                </div>
+                <div id="movement-chart" class="chart chart-bars dual"></div>
+              </article>
+            </div>
+
+            <div class="two-col">
+              <article class="panel">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Top stock</p>
+                    <h3>Mayor volumen</h3>
+                  </div>
+                </div>
+                <ul id="top-products" class="list"></ul>
+              </article>
+              <article class="panel">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Alertas</p>
+                    <h3>Reposicion urgente</h3>
+                  </div>
+                </div>
+                <ul id="low-stock-list" class="list"></ul>
+              </article>
+            </div>
+          </section>
+
+          <section class="view" data-view="treasury">
+            <div class="section-head section-head-gap">
+              <div>
+                <p class="eyebrow">Caja</p>
+                <h3>Tesoreria del local</h3>
+              </div>
+              <p class="section-copy">Cobros, compras, gastos, impuestos y retiros en un mismo lugar.</p>
+            </div>
+
+            <div class="dashboard-grid">
+              <article class="stat-card panel">
+                <span class="stat-label">Saldo actual</span>
+                <strong id="treasury-balance">$0</strong>
+                <p>Ingresos menos egresos registrados.</p>
+              </article>
+              <article class="stat-card panel">
+                <span class="stat-label">Ingresos</span>
+                <strong id="treasury-income">$0</strong>
+                <p>Total de operaciones positivas.</p>
+              </article>
+              <article class="stat-card panel danger">
+                <span class="stat-label">Egresos</span>
+                <strong id="treasury-expense">$0</strong>
+                <p>Total de gastos, compras e impuestos.</p>
+              </article>
+              <article class="stat-card panel warning">
+                <span class="stat-label">Movimientos</span>
+                <strong id="treasury-count">0</strong>
+                <p>Cantidad de operaciones cargadas.</p>
+              </article>
+            </div>
+
+            <div class="split-grid">
+              <article class="panel">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Nuevo movimiento</p>
+                    <h3>Gestor de caja</h3>
+                  </div>
+                </div>
+                <form id="treasury-form" class="stack">
+                  <div class="form-grid">
+                    <label>
+                      <span>Tipo</span>
+                      <select id="tx-type" required>
+                        <option value="INCOME">Ingreso</option>
+                        <option value="SALE">Venta</option>
+                        <option value="CAPITAL">Aporte de capital</option>
+                        <option value="EXPENSE">Gasto</option>
+                        <option value="PURCHASE">Compra</option>
+                        <option value="WITHDRAWAL">Retiro</option>
+                        <option value="TAX">Impuesto</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Rubro</span>
+                      <input id="tx-category" placeholder="Servicios, ventas, proveedor" required />
+                    </label>
+                  </div>
+                  <div class="form-grid">
+                    <label>
+                      <span>Monto</span>
+                      <input id="tx-amount" type="number" min="0.01" step="0.01" required />
+                    </label>
+                    <label>
+                      <span>Medio de pago</span>
+                      <input id="tx-method" placeholder="Efectivo, transferencia, tarjeta" />
+                    </label>
+                  </div>
+                  <div class="form-grid">
+                    <label>
+                      <span>Referencia</span>
+                      <input id="tx-reference" placeholder="Factura, comprobante, orden" />
+                    </label>
+                    <label>
+                      <span>Fecha</span>
+                      <input id="tx-date" type="datetime-local" />
+                    </label>
+                  </div>
+                  <label>
+                    <span>Nota</span>
+                    <textarea id="tx-note" rows="3" placeholder="Detalle adicional"></textarea>
+                  </label>
+                  <button type="submit" class="primary">Guardar transaccion</button>
+                </form>
+              </article>
+
+              <article class="panel">
+                <div class="section-head section-head-gap">
+                  <div>
+                    <p class="eyebrow">Historial</p>
+                    <h3>Transacciones</h3>
+                  </div>
+                  <div class="filters">
+                    <select id="tx-filter-type">
+                      <option value="">Todos los tipos</option>
+                      <option value="INCOME">Ingreso</option>
+                      <option value="SALE">Venta</option>
+                      <option value="CAPITAL">Capital</option>
+                      <option value="EXPENSE">Gasto</option>
+                      <option value="PURCHASE">Compra</option>
+                      <option value="WITHDRAWAL">Retiro</option>
+                      <option value="TAX">Impuesto</option>
+                    </select>
+                    <input id="tx-filter-category" placeholder="Filtrar por rubro" />
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Tipo</th>
+                        <th>Rubro</th>
+                        <th>Monto</th>
+                        <th>Medio</th>
+                        <th>Fecha</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="transactions-table"></tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <datalist id="category-options"></datalist>
+
+    <div id="product-form-modal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" data-close-product-modal></div>
+      <div class="modal-card modal-card-form" role="dialog" aria-modal="true" aria-labelledby="form-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Ficha</p>
+            <h3 id="form-title">Nuevo repuesto</h3>
+          </div>
+          <button type="button" class="ghost modal-dismiss" data-close-product-modal>Cerrar</button>
+        </div>
+        <p class="section-copy">Carga o edita un repuesto sin sacrificar la vista completa del inventario.</p>
+        <form id="product-form" class="stack">
+          <input type="hidden" id="product-id" />
+          <label>
+            <span>Nombre</span>
+            <input id="product-name" required />
+          </label>
+          <label>
+            <span>Descripcion</span>
+            <textarea id="product-description" rows="3"></textarea>
+          </label>
+          <label>
+            <span>Rubro</span>
+            <input id="product-category" list="category-options" required />
+          </label>
+          <div class="form-grid">
+            <label>
+              <span>Precio</span>
+              <input id="product-price" type="number" min="0" step="0.01" required />
+            </label>
+            <label>
+              <span>Stock</span>
+              <input id="product-stock" type="number" min="0" step="1" required />
+            </label>
+          </div>
+          <label>
+            <span>Foto del repuesto</span>
+            <input id="product-image" type="url" placeholder="https://..." />
+          </label>
+          <label class="checkbox-row">
+            <input id="product-featured" type="checkbox" />
+            <span>Alta rotacion</span>
+          </label>
+          <div class="actions">
+            <button type="submit" class="primary">Guardar</button>
+            <button type="button" id="reset-product" class="ghost">Limpiar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="product-confirm-modal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal></div>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="product-confirm-title">
+        <p class="eyebrow">Revision</p>
+        <h3 id="product-confirm-title">Confirmar alta de repuesto</h3>
+        <p class="section-copy">Verifica los datos antes de crear el producto en la base.</p>
+        <div id="product-confirm-summary" class="confirm-summary"></div>
+        <div class="actions modal-actions">
+          <button type="button" class="ghost" id="cancel-product-confirm">Cancelar</button>
+          <button type="button" class="primary" id="accept-product-confirm">Crear repuesto</button>
+        </div>
+      </div>
+    </div>
+
+    <template id="product-row-template">
+      <tr>
+        <td class="product-cell">
+          <div class="product-main">
+            <div class="product-thumb">
+              <img data-image alt="" hidden />
+              <span data-placeholder></span>
+            </div>
+            <div class="product-info">
+              <strong data-name></strong>
+              <small data-description></small>
+            </div>
+          </div>
+        </td>
+        <td data-category></td>
+        <td data-price></td>
+        <td data-stock></td>
+        <td data-status></td>
+        <td class="row-actions">
+          <button type="button" data-sale class="sale">Vender 1</button>
+          <button type="button" data-edit>Editar</button>
+          <button type="button" data-delete class="danger">Borrar</button>
+        </td>
+      </tr>
+    </template>
+
+    <template id="list-item-template">
+      <li class="list-item">
+        <div>
+          <strong data-title></strong>
+          <p data-subtitle></p>
+        </div>
+        <div class="list-meta">
+          <span data-value></span>
+          <small data-date></small>
+        </div>
+      </li>
+    </template>
+
+    <template id="movement-line-template">
+      <div class="movement-line">
+        <label>
+          <span>Repuesto</span>
+          <select data-line-product required>
+            <option value="">Seleccionar repuesto</option>
+          </select>
+        </label>
+        <label>
+          <span>Unidades</span>
+          <input data-line-quantity type="number" min="1" step="1" required />
+        </label>
+        <div class="movement-line-meta">
+          <small data-line-stock>Stock: -</small>
+          <strong data-line-subtotal>$0</strong>
+        </div>
+        <button type="button" data-remove-line class="danger">Quitar</button>
+      </div>
+    </template>
+
+    <template id="transaction-row-template">
+      <tr>
+        <td data-type></td>
+        <td data-category></td>
+        <td data-amount></td>
+        <td data-method></td>
+        <td data-date></td>
+        <td class="row-actions">
+          <button type="button" data-delete class="danger">Borrar</button>
+        </td>
+      </tr>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

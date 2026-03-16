@@ -1,0 +1,91 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e5]: Repuestos de motos
+      - heading "Stockmanager" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Inventario, movimientos y caja con una estetica de mostrador, no de nave espacial.
+    - navigation [ref=e8]:
+      - button "Mostrador" [ref=e9] [cursor=pointer]
+      - button "Inventario" [ref=e10] [cursor=pointer]
+      - button "Movimientos" [ref=e11] [cursor=pointer]
+      - button "Estadisticas" [ref=e12] [cursor=pointer]
+      - button "Caja" [ref=e13] [cursor=pointer]
+    - generic [ref=e14]:
+      - paragraph [ref=e15]: Lineas fuertes
+      - generic [ref=e16]:
+        - generic [ref=e17]: Frenos
+        - generic [ref=e18]: Motor
+        - generic [ref=e19]: Transmision
+        - generic [ref=e20]: Electricidad
+      - paragraph [ref=e21]: La idea es ubicar rapido lo que rota y lo que falta. Eso si sirve en un local.
+    - generic [ref=e22]:
+      - strong [ref=e25]: Revisando base...
+      - paragraph [ref=e26]: Esperando respuesta del servidor.
+  - generic [ref=e27]:
+    - banner [ref=e28]:
+      - generic [ref=e29]:
+        - paragraph [ref=e30]: Panel de mostrador
+        - heading "Mostrador" [level=2] [ref=e31]
+        - paragraph [ref=e32]: Vista general del negocio, sin maquillaje ni efectos raros.
+      - generic [ref=e33]:
+        - article [ref=e34]:
+          - text: Items
+          - strong [ref=e35]: "0"
+        - article [ref=e36]:
+          - text: Unidades
+          - strong [ref=e37]: "0"
+        - article [ref=e38]:
+          - text: Caja
+          - strong [ref=e39]: $0
+    - main [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - paragraph [ref=e44]: Resumen general
+            - heading "Lo importante primero" [level=3] [ref=e45]
+            - paragraph [ref=e46]: Inventario, caja y actividad reciente con foco en repuestos de motos. Si una linea se queda corta o la caja se tuerce, se ve aca.
+          - generic [ref=e47]:
+            - generic [ref=e48]: Rubros del dia
+            - generic [ref=e49]:
+              - generic [ref=e50]: Pastillas
+              - generic [ref=e51]: Kit transmision
+              - generic [ref=e52]: Aceite
+              - generic [ref=e53]: Baterias
+            - paragraph [ref=e54]: Mas taller y mostrador. Menos interfaz pretendiendo ser una cabina futurista.
+        - generic [ref=e55]:
+          - article [ref=e56]:
+            - text: Valor de mercaderia
+            - strong [ref=e57]: $0
+            - paragraph [ref=e58]: Lectura rapida del stock valorizado. Sirve para orientarte, no para cerrar balances.
+          - article [ref=e59]:
+            - text: Salidas 7 dias
+            - strong [ref=e60]: "0"
+            - paragraph [ref=e61]: Unidades que ya salieron del local en la ultima semana.
+          - article [ref=e62]:
+            - text: Ingresos del mes
+            - strong [ref=e63]: $0
+            - paragraph [ref=e64]: Ventas, cobros y aportes registrados hasta ahora.
+          - article [ref=e65]:
+            - text: Egresos del mes
+            - strong [ref=e66]: $0
+            - paragraph [ref=e67]: Compras, impuestos, gastos y retiros cargados en el periodo.
+        - generic [ref=e68]:
+          - article [ref=e69]:
+            - generic [ref=e71]:
+              - paragraph [ref=e72]: Caja
+              - heading "Flujo mensual" [level=3] [ref=e73]
+          - article [ref=e75]:
+            - generic [ref=e77]:
+              - paragraph [ref=e78]: Gastos
+              - heading "Distribucion por rubro" [level=3] [ref=e79]
+        - generic [ref=e81]:
+          - article [ref=e82]:
+            - generic [ref=e84]:
+              - paragraph [ref=e85]: Actividad
+              - heading "Ultimos movimientos" [level=3] [ref=e86]
+            - list
+          - article [ref=e87]:
+            - generic [ref=e89]:
+              - paragraph [ref=e90]: Caja
+              - heading "Ultimas transacciones" [level=3] [ref=e91]
+            - list
