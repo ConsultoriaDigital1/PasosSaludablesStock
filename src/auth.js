@@ -77,11 +77,36 @@ export function verifyJwt(token, secret) {
   return payload;
 }
 
+export function readHeaderValue(headerValue) {
+  if (typeof headerValue === 'string') {
+    return headerValue.trim();
+  }
+
+  if (Array.isArray(headerValue)) {
+    return typeof headerValue[0] === 'string' ? headerValue[0].trim() : '';
+  }
+
+  return '';
+}
+
 export function readBearerToken(headerValue) {
-  if (typeof headerValue !== 'string') {
+  const normalizedHeader = readHeaderValue(headerValue);
+
+  if (!normalizedHeader) {
     return '';
   }
 
-  const [scheme, token] = headerValue.split(' ');
+  const [scheme, token] = normalizedHeader.split(/\s+/, 2);
   return scheme?.toLowerCase() === 'bearer' ? token ?? '' : '';
+}
+
+export function safeEqual(left, right) {
+  const leftBuffer = Buffer.from(String(left));
+  const rightBuffer = Buffer.from(String(right));
+
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }

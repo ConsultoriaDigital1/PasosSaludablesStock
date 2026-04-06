@@ -44,3 +44,19 @@ npm run dev
 ```
 
 Abrir `http://localhost:4010`.
+
+## API key para n8n
+
+Si quieres consumir la API desde n8n sin hacer login JWT, define `N8N_API_KEY` en `.env`.
+
+El middleware acepta cualquiera de estas dos variantes:
+
+- Header `x-api-key: TU_API_KEY`
+- Header `Authorization: Bearer TU_API_KEY`
+
+Para obtener todos los productos:
+
+```bash
+curl http://localhost:4010/api/products ^
+  -H "x-api-key: TU_API_KEY"
+```

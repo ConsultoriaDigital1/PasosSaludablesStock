@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { readBearerToken, signJwt, verifyJwt } from './auth.js';
+import crypto from 'node:crypto';
+import { readBearerToken, readHeaderValue, safeEqual, signJwt, verifyJwt } from './auth.js';
 import { ensureSchema, mapCategory, mapMovement, mapProduct, mapTransaction, sql } from './db.js';
 
 dotenv.config();
@@ -18,6 +18,7 @@ const authUsername = process.env.AUTH_USERNAME || 'pasossaludables';
 const authPassword = process.env.AUTH_PASSWORD || 'pelusa50';
 const jwtSecret = process.env.JWT_SECRET || 'stockmanager-change-this-secret';
 const jwtExpiresHours = Math.max(Number(process.env.JWT_EXPIRES_HOURS || 12), 1);
+const n8nApiKey = process.env.N8N_API_KEY || '';
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(publicDir));
@@ -46,6 +47,22 @@ app.use('/api', (req, res, next) => {
   }
 
   const token = readBearerToken(req.headers.authorization);
+  const apiKey = readHeaderValue(req.headers['x-api-key']);
+
+  if (
+    n8nApiKey &&
+    (
+      (apiKey && safeEqual(apiKey, n8nApiKey)) ||
+      (token && safeEqual(token, n8nApiKey))
+    )
+  ) {
+    req.auth = {
+      username: 'n8n',
+      exp: null,
+      strategy: 'api-key'
+    };
+    return next();
+  }
 
   if (!token) {
     return res.status(401).json({ error: 'Sesion requerida' });
@@ -55,7 +72,8 @@ app.use('/api', (req, res, next) => {
     const payload = verifyJwt(token, jwtSecret);
     req.auth = {
       username: payload.sub,
-      exp: Number(payload.exp)
+      exp: Number(payload.exp),
+      strategy: 'jwt'
     };
     return next();
   } catch (error) {
@@ -68,7 +86,8 @@ app.get('/api/auth/session', (req, res) => {
     user: {
       username: req.auth.username
     },
-    expiresAt: req.auth.exp * 1000
+    strategy: req.auth.strategy || 'jwt',
+    expiresAt: Number.isFinite(req.auth.exp) ? req.auth.exp * 1000 : null
   });
 });
 
@@ -1048,17 +1067,6 @@ function groupMovementRows(rows) {
       note: `${group.items.map((item) => `${item.productName} x${item.quantity}`).join(', ')}${group.note ? ` - ${group.note}` : ''}`
     };
   });
-}
-
-function safeEqual(left, right) {
-  const leftBuffer = Buffer.from(String(left));
-  const rightBuffer = Buffer.from(String(right));
-
-  if (leftBuffer.length !== rightBuffer.length) {
-    return false;
-  }
-
-  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 ensureSchema()
