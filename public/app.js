@@ -1259,9 +1259,9 @@ function stockBadge(stock) {
 }
 
 function money(value) {
-  return new Intl.NumberFormat('es-AR', {
+  return new Intl.NumberFormat('es-PY', {
     style: 'currency',
-    currency: 'ARS',
+    currency: 'PYG',
     maximumFractionDigits: 0
   }).format(value);
 }

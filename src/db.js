@@ -1,16 +1,18 @@
 import 'dotenv/config';
 import { neon } from '@neondatabase/serverless';
 
-const databaseUrl = process.env.DATABASE_URL;
+export function createSqlClient(databaseUrl = process.env.DATABASE_URL) {
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL is required');
+  }
 
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL is required');
+  return neon(databaseUrl);
 }
 
-export const sql = neon(databaseUrl);
+export const sql = createSqlClient();
 
-export async function ensureSchema() {
-  await sql`
+export async function ensureSchema(client = sql) {
+  await client`
     CREATE TABLE IF NOT EXISTS categories (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
@@ -20,7 +22,7 @@ export async function ensureSchema() {
     )
   `;
 
-  await sql`
+  await client`
     CREATE TABLE IF NOT EXISTS products (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
@@ -36,7 +38,7 @@ export async function ensureSchema() {
     )
   `;
 
-  await sql`
+  await client`
     CREATE TABLE IF NOT EXISTS stock_movements (
       id SERIAL PRIMARY KEY,
       product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
@@ -48,7 +50,7 @@ export async function ensureSchema() {
     )
   `;
 
-  await sql`
+  await client`
     CREATE TABLE IF NOT EXISTS treasury_transactions (
       id SERIAL PRIMARY KEY,
       transaction_type VARCHAR(30) NOT NULL,
@@ -62,17 +64,17 @@ export async function ensureSchema() {
     )
   `;
 
-  await sql`
+  await client`
     ALTER TABLE products
     ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false
   `;
 
-  await sql`
+  await client`
     ALTER TABLE products
     ADD COLUMN IF NOT EXISTS stock_quantity INTEGER NOT NULL DEFAULT 0
   `;
 
-  await sql`
+  await client`
     ALTER TABLE stock_movements
     ADD COLUMN IF NOT EXISTS batch_code VARCHAR(64)
   `;
