@@ -9,7 +9,10 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "db:migrate": "node scripts/migrate-database.js"
+    "db:migrate": "node scripts/migrate-database.js",
+    "inventory:sync": "node scripts/sync-inventory-from-json.js",
+    "products:backfill-images": "node scripts/backfill-product-images.js",
+    "products:fetch-web-images": "node scripts/fetch-product-images-from-web.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
