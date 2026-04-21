@@ -547,9 +547,12 @@ function renderProducts() {
     renderProductThumb(row, product);
 
     const saleButton = row.querySelector('[data-sale]');
+    const featureButton = row.querySelector('[data-feature]');
     saleButton.disabled = product.stockQuantity <= 0;
     saleButton.textContent = product.stockQuantity <= 0 ? 'Sin stock' : 'Vender 1';
     saleButton.addEventListener('click', () => quickSellProduct(product));
+    featureButton.textContent = product.featured ? 'Quitar destacado' : 'Destacar';
+    featureButton.addEventListener('click', () => toggleProductFeatured(product));
     row.querySelector('[data-edit]').addEventListener('click', () => fillProductForm(product));
     row.querySelector('[data-delete]').addEventListener('click', () => deleteProduct(product.id));
     nodes.productsTable.append(fragment);
@@ -565,11 +568,13 @@ function renderProductThumb(row, product) {
   image.hidden = true;
   image.removeAttribute('src');
 
-  if (!product.image) {
+  const imageSrc = normalizeProductImage(product.image);
+
+  if (!imageSrc) {
     return;
   }
 
-  image.src = product.image;
+  image.src = imageSrc;
   image.alt = product.name;
   image.hidden = false;
   placeholder.hidden = true;
@@ -887,7 +892,7 @@ function fillProductForm(product) {
   nodes.productCategory.value = product.category;
   nodes.productPrice.value = String(product.price);
   nodes.productStock.value = String(product.stockQuantity);
-  nodes.productImage.value = product.image || '';
+  nodes.productImage.value = normalizeProductImage(product.image);
   nodes.productFeatured.checked = Boolean(product.featured);
   switchView('inventory');
   openProductFormModal();
@@ -951,7 +956,7 @@ function buildProductPayload() {
   const category = nodes.productCategory.value.trim();
   const price = Number(nodes.productPrice.value);
   const stockQuantity = Number(nodes.productStock.value);
-  const image = nodes.productImage.value.trim();
+  const image = normalizeProductImage(nodes.productImage.value);
 
   if (!name) {
     window.alert('El nombre del repuesto es obligatorio.');
@@ -994,7 +999,7 @@ function openProductConfirmModal(payload) {
     <div class="confirm-row"><span>Rubro</span><strong>${escapeHtml(payload.category)}</strong></div>
     <div class="confirm-row"><span>Precio</span><strong>${money(payload.price)}</strong></div>
     <div class="confirm-row"><span>Stock inicial</span><strong>${payload.stockQuantity}</strong></div>
-    <div class="confirm-row"><span>Alta rotacion</span><strong>${payload.featured ? 'Si' : 'No'}</strong></div>
+    <div class="confirm-row"><span>Mostrar en Pasos Saludables</span><strong>${payload.featured ? 'Si' : 'No'}</strong></div>
   `;
   nodes.productConfirmModal.classList.add('is-open');
   nodes.productConfirmModal.setAttribute('aria-hidden', 'false');
@@ -1102,6 +1107,18 @@ async function quickSellProduct(product) {
 
   await refreshAllData();
   window.alert(`Venta rapida registrada para ${product.name}.`);
+}
+
+async function toggleProductFeatured(product) {
+  await request(`/api/products/${product.id}/featured`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      featured: !product.featured
+    })
+  });
+
+  await refreshAllData();
 }
 
 async function deleteProduct(id) {
@@ -1243,7 +1260,7 @@ function stockLabel(product) {
     return 'Critico';
   }
   if (product.featured) {
-    return 'Alta rotacion';
+    return 'Destacado';
   }
   return 'Estable';
 }
@@ -1296,6 +1313,57 @@ function thumbLabel(value) {
     .join('');
 
   return cleaned || 'RP';
+}
+
+function normalizeProductImage(value) {
+  const normalized = String(value || '').trim().replaceAll('\\', '/');
+
+  if (!normalized) {
+    return '';
+  }
+
+  if (isRemoteImageSource(normalized)) {
+    return normalized;
+  }
+
+  const localAssetPath = coerceLocalAssetPath(normalized);
+  if (localAssetPath) {
+    return localAssetPath;
+  }
+
+  if (normalized.startsWith('/')) {
+    return normalized;
+  }
+
+  return normalized;
+}
+
+function isRemoteImageSource(value) {
+  return /^(https?:)?\/\//i.test(value) || value.startsWith('data:') || value.startsWith('blob:');
+}
+
+function coerceLocalAssetPath(value) {
+  const cleaned = value.replace(/^file:\/+/i, '/');
+  const publicAssetMatch = cleaned.match(/(?:^|\/)public\/assets\/(.+)$/i);
+
+  if (publicAssetMatch) {
+    return `/assets/${stripLeadingSlashes(publicAssetMatch[1])}`;
+  }
+
+  const imageDirMatch = cleaned.match(/(?:^|\/)img\/(.+)$/i);
+  if (imageDirMatch) {
+    return `/assets/${stripLeadingSlashes(imageDirMatch[1])}`;
+  }
+
+  if (/^\.?\/?assets\//i.test(cleaned)) {
+    return `/assets/${cleaned.replace(/^\.?\/?assets\//i, '')}`;
+  }
+
+  return '';
+}
+
+function stripLeadingSlashes(value) {
+  return String(value || '').replace(/^\/+/, '');
 }
 
 function escapeHtml(value) {

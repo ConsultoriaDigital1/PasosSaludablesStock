@@ -567,7 +567,7 @@
           <button type="button" class="ghost modal-dismiss" data-close-product-modal>Cerrar</button>
         </div>
         <p class="section-copy">Carga o edita un repuesto sin sacrificar la vista completa del inventario.</p>
-        <form id="product-form" class="stack">
+        <form id="product-form" class="stack" novalidate>
           <input type="hidden" id="product-id" />
           <label>
             <span>Nombre</span>
@@ -593,11 +593,11 @@
           </div>
           <label>
             <span>Foto del repuesto</span>
-            <input id="product-image" type="url" placeholder="https://..." />
+            <input id="product-image" type="text" placeholder="/assets/... , assets/... o https://..." spellcheck="false" />
           </label>
           <label class="checkbox-row">
             <input id="product-featured" type="checkbox" />
-            <span>Alta rotacion</span>
+            <span>Mostrar en Pasos Saludables</span>
           </label>
           <div class="actions">
             <button type="submit" class="primary">Guardar</button>
@@ -641,6 +641,7 @@
         <td data-status></td>
         <td class="row-actions">
           <button type="button" data-sale class="sale">Vender 1</button>
+          <button type="button" data-feature class="ghost">Destacar</button>
           <button type="button" data-edit>Editar</button>
           <button type="button" data-delete class="danger">Borrar</button>
         </td>

@@ -41,6 +41,17 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
+app.get('/api/public/products', async (req, res) => {
+  const filters = readProductFilters(req.query, { defaultFeatured: true });
+
+  try {
+    const rows = await loadProductRows(filters);
+    res.json(rows.map(mapProduct));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load public products' });
+  }
+});
+
 app.use('/api', (req, res, next) => {
   if (req.path === '/auth/login') {
     return next();
@@ -281,36 +292,10 @@ app.post('/api/categories', async (req, res) => {
 });
 
 app.get('/api/products', async (req, res) => {
-  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
-  const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
+  const filters = readProductFilters(req.query);
 
   try {
-    let rows;
-
-    if (search) {
-      rows = await sql`
-        SELECT id, name, description, price, category, image, images, featured, stock_quantity, created_at, updated_at
-        FROM products
-        WHERE name ILIKE ${`%${search}%`}
-          OR description ILIKE ${`%${search}%`}
-          OR category ILIKE ${`%${search}%`}
-        ORDER BY updated_at DESC, created_at DESC
-      `;
-    } else if (category) {
-      rows = await sql`
-        SELECT id, name, description, price, category, image, images, featured, stock_quantity, created_at, updated_at
-        FROM products
-        WHERE category = ${category}
-        ORDER BY updated_at DESC, created_at DESC
-      `;
-    } else {
-      rows = await sql`
-        SELECT id, name, description, price, category, image, images, featured, stock_quantity, created_at, updated_at
-        FROM products
-        ORDER BY updated_at DESC, created_at DESC
-      `;
-    }
-
+    const rows = await loadProductRows(filters);
     res.json(rows.map(mapProduct));
   } catch (error) {
     res.status(500).json({ error: 'Failed to load products' });
@@ -382,6 +367,34 @@ app.put('/api/products/:id', async (req, res) => {
     return res.json(mapProduct(rows[0]));
   } catch (error) {
     return res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
+app.patch('/api/products/:id/featured', async (req, res) => {
+  const id = Number(req.params.id);
+  const featured = Boolean(req.body?.featured);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid product id' });
+  }
+
+  try {
+    const rows = await sql`
+      UPDATE products
+      SET
+        featured = ${featured},
+        updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, name, description, price, category, image, images, featured, stock_quantity, created_at, updated_at
+    `;
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    return res.json(mapProduct(rows[0]));
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to update product featured flag' });
   }
 });
 
@@ -858,17 +871,65 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
 });
 
+function readProductFilters(query, { defaultFeatured = null } = {}) {
+  const search = typeof query.search === 'string' ? query.search.trim() : '';
+  const category = typeof query.category === 'string' ? query.category.trim() : '';
+  const featured = parseBooleanQueryValue(query.featured, defaultFeatured);
+
+  return {
+    search,
+    category,
+    featured
+  };
+}
+
+async function loadProductRows({ search = '', category = '', featured = null } = {}) {
+  const searchPattern = `%${search}%`;
+
+  return sql`
+    SELECT id, name, description, price, category, image, images, featured, stock_quantity, created_at, updated_at
+    FROM products
+    WHERE (
+      ${search === ''}
+      OR name ILIKE ${searchPattern}
+      OR description ILIKE ${searchPattern}
+      OR category ILIKE ${searchPattern}
+    )
+      AND (${category === ''} OR category = ${category})
+      AND (${featured == null} OR featured = ${featured})
+    ORDER BY featured DESC, updated_at DESC, created_at DESC
+  `;
+}
+
+function parseBooleanQueryValue(value, fallback = null) {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (['1', 'true', 'si', 'yes'].includes(normalized)) {
+    return true;
+  }
+
+  if (['0', 'false', 'no'].includes(normalized)) {
+    return false;
+  }
+
+  return fallback;
+}
+
 function normalizeProductInput(body) {
   const input = body ?? {};
   const name = typeof input.name === 'string' ? input.name.trim() : '';
   const description = typeof input.description === 'string' ? input.description.trim() : '';
   const category = typeof input.category === 'string' ? input.category.trim() : '';
-  const image = typeof input.image === 'string' ? input.image.trim() : '';
+  const image = normalizeProductImageValue(input.image);
   const price = Number(input.price);
   const stockQuantity = Number(input.stockQuantity);
   const featured = Boolean(input.featured);
   const images = Array.isArray(input.images)
-    ? input.images.filter((item) => typeof item === 'string' && item.trim()).map((item) => item.trim())
+    ? input.images.map(normalizeProductImageValue).filter(Boolean)
     : image
       ? [image]
       : [];
@@ -899,6 +960,61 @@ function normalizeProductInput(body) {
     stockQuantity,
     featured
   };
+}
+
+function normalizeProductImageValue(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  const normalized = value.trim().replaceAll('\\', '/');
+
+  if (!normalized) {
+    return '';
+  }
+
+  if (isRemoteImageSource(normalized)) {
+    return normalized;
+  }
+
+  const localAssetPath = coerceLocalAssetPath(normalized);
+  if (localAssetPath) {
+    return localAssetPath;
+  }
+
+  if (normalized.startsWith('/')) {
+    return normalized;
+  }
+
+  return normalized;
+}
+
+function isRemoteImageSource(value) {
+  return /^(https?:)?\/\//i.test(value) || value.startsWith('data:') || value.startsWith('blob:');
+}
+
+function coerceLocalAssetPath(value) {
+  const cleaned = value.replace(/^file:\/+/i, '/');
+  const publicAssetMatch = cleaned.match(/(?:^|\/)public\/assets\/(.+)$/i);
+
+  if (publicAssetMatch) {
+    return `/assets/${stripLeadingSlashes(publicAssetMatch[1])}`;
+  }
+
+  const imageDirMatch = cleaned.match(/(?:^|\/)img\/(.+)$/i);
+  if (imageDirMatch) {
+    return `/assets/${stripLeadingSlashes(imageDirMatch[1])}`;
+  }
+
+  if (/^\.?\/?assets\//i.test(cleaned)) {
+    return `/assets/${cleaned.replace(/^\.?\/?assets\//i, '')}`;
+  }
+
+  return '';
+}
+
+function stripLeadingSlashes(value) {
+  return String(value || '').replace(/^\/+/, '');
 }
 
 function normalizeMovementInput(body) {
