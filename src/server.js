@@ -272,16 +272,32 @@ app.get('/api/categories', async (_req, res) => {
 });
 
 app.post('/api/categories', async (req, res) => {
-  const { name, description = '' } = req.body ?? {};
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+  const description = typeof req.body?.description === 'string' ? req.body.description.trim() : '';
 
-  if (!name || typeof name !== 'string') {
+  if (!name) {
     return res.status(400).json({ error: 'Category name is required' });
   }
 
   try {
+    const existingRows = await sql`
+      SELECT id, name, description, created_at, updated_at
+      FROM categories
+      WHERE LOWER(BTRIM(name)) = LOWER(${name})
+      ORDER BY id ASC
+      LIMIT 1
+    `;
+
+    if (existingRows.length > 0) {
+      return res.status(409).json({
+        error: 'La categoria ya existe',
+        category: mapCategory(existingRows[0])
+      });
+    }
+
     const rows = await sql`
       INSERT INTO categories (name, description)
-      VALUES (${name.trim()}, ${String(description).trim()})
+      VALUES (${name}, ${description})
       RETURNING id, name, description, created_at, updated_at
     `;
 

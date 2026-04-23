@@ -600,6 +600,18 @@ label span {
   color: var(--text);
 }
 
+.field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field-action {
+  padding: 8px 12px;
+  font-size: 0.88rem;
+}
+
 .form-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -630,6 +642,8 @@ label span {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .inventory-search-panel {
@@ -1110,8 +1124,16 @@ th {
   z-index: 90;
 }
 
+#category-form-modal {
+  z-index: 95;
+}
+
 .modal-card-form {
   width: min(760px, calc(100vw - 24px));
+}
+
+.modal-card-compact {
+  width: min(560px, calc(100vw - 24px));
 }
 
 .modal-head {
@@ -1257,6 +1279,10 @@ th {
     grid-template-columns: 1fr;
   }
 
+  .inventory-actions {
+    justify-content: flex-start;
+  }
+
   .inventory-filter {
     justify-self: stretch;
     width: 100%;
@@ -1278,6 +1304,11 @@ th {
   }
 
   .modal-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .field-head {
     flex-direction: column;
     align-items: flex-start;
   }

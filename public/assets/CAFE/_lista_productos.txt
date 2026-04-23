@@ -1,0 +1,19 @@
+45854	Super Coffee Vainilla 380gr	Super Coffee Vainilla 380gr.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/cb0fb61fa2dc98cc5be609a92b52eff7.jpeg
+45855	Super Coffee Vainilla 220gr	Super Coffee Vainilla 220gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/2484f00bf886c04e3d5c19d7a4594ba3.png
+45859	Super Coffee Vainilla Sachet	Super Coffee Vainilla Sachet.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/06a78e2cf9267f9dcd5fa8d694dc5f48.jpeg
+45860	Super Coffee Original Sachet	Super Coffee Original Sachet.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/ba2e9af284d88b7bec80f2de55e8a094.png
+45861	Super Coffee Choconilla 220gr	Super Coffee Choconilla 220gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/09c3d147e1910e92db76c423fefd7307.png
+45862	Super Coffee Choconilla Sachet	Super Coffee Choconilla Sachet.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/42b93b52b8ed5b3821bb9f726188b826.jpeg
+45924	Super Coffee Original 380gr	Super Coffee Original 380gr.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/d1096ead81f365aba2124ab61df8dba2.jpeg
+45925	Super Coffee Original 220gr	Super Coffee Original 220gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/4f94dcf170b8f6f354b0ffd62630f44b.png
+45929	Capsulas de Cafe Dolce Gusto ESPRESSO INTENSO	Capsulas de Cafe Dolce Gusto ESPRESSO INTENSO.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/dd7026892ef0a6766d562faac794e8d9.jpeg
+45930	Capsulas de Cafe Dolce Gusto ESPRESSO	Capsulas de Cafe Dolce Gusto ESPRESSO.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/f9d2ff438613da0ef3b9bf9d9c857b32.jpeg
+54086	Super Coffee Choconilla 380gr	Super Coffee Choconilla 380gr.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/0e8ded0ec0e1e3cbf54c991c09ab9c6d.jpeg
+56127	Super Coffee Pistacho 220gr	Super Coffee Pistacho 220gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/65da24128844f9d196b43a029f9a6b31.png
+61223	Super Coffee Lingua do Gato 220gr	Super Coffee Lingua do Gato 220gr.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/8e1cf1764cc982ecf102122532f4f1cf.jpeg
+70049	Super Coffee CHocolate Lengua de Gato 380gr	Super Coffee CHocolate Lengua de Gato 380gr.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/11e67a9b11ae49cfbdb43c575e256566.jpeg
+70050	Super Coffee Chocolate Lengua de Gato Sachet	Super Coffee Chocolate Lengua de Gato Sachet.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/569b57e0001bdda838a6e40faa9d0079.jpeg
+70051	Super Coffee Pistacho 220gr	Super Coffee Pistacho 220gr [70051].png	https://fiweex.com/sistema/img/img_catalogo_producto/big/241b67bfa4e49c8d7964fb14250820bf.png
+70052	Super Coffee Pistacho 380gr	Super Coffee Pistacho 380gr.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/abe3cbd767f122bc432aed3800cfcbfc.jpeg
+70053	Super Coffee Pistacho Sachet	Super Coffee Pistacho Sachet.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/9a25138f0c18dcdad399e2b8701eac43.jpeg
+70054	Super Coffee Beijinho Sachet	Super Coffee Beijinho Sachet.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/bb3f4217c4429621ef25ebafaa6415ac.jpeg

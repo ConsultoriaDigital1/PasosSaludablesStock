@@ -65,6 +65,7 @@ const nodes = {
   productsTable: document.querySelector('#products-table'),
   productTemplate: document.querySelector('#product-row-template'),
   openProductModal: document.querySelector('#open-product-modal'),
+  openCategoryModalButtons: [...document.querySelectorAll('[data-open-category-modal]')],
   productFormModal: document.querySelector('#product-form-modal'),
   productForm: document.querySelector('#product-form'),
   formTitle: document.querySelector('#form-title'),
@@ -77,12 +78,16 @@ const nodes = {
   productImage: document.querySelector('#product-image'),
   productFeatured: document.querySelector('#product-featured'),
   resetProduct: document.querySelector('#reset-product'),
-  categoryOptions: document.querySelector('#category-options'),
+  categoryFormModal: document.querySelector('#category-form-modal'),
+  categoryForm: document.querySelector('#category-form'),
+  categoryName: document.querySelector('#category-name'),
+  categoryDescription: document.querySelector('#category-description'),
   productConfirmModal: document.querySelector('#product-confirm-modal'),
   productConfirmSummary: document.querySelector('#product-confirm-summary'),
   cancelProductConfirm: document.querySelector('#cancel-product-confirm'),
   acceptProductConfirm: document.querySelector('#accept-product-confirm'),
   productModalCloseTargets: [...document.querySelectorAll('[data-close-product-modal]')],
+  categoryModalCloseTargets: [...document.querySelectorAll('[data-close-category-modal]')],
   modalCloseTargets: [...document.querySelectorAll('[data-close-modal]')],
   movementForm: document.querySelector('#movement-form'),
   movementType: document.querySelector('#movement-type'),
@@ -158,12 +163,19 @@ function bindEvents() {
     resetProductForm();
     openProductFormModal();
   });
+  nodes.openCategoryModalButtons.forEach((button) => {
+    button.addEventListener('click', openCategoryFormModal);
+  });
   nodes.productForm.addEventListener('submit', saveProduct);
+  nodes.categoryForm.addEventListener('submit', saveCategory);
   nodes.resetProduct.addEventListener('click', resetProductForm);
   nodes.cancelProductConfirm.addEventListener('click', closeProductConfirmModal);
   nodes.acceptProductConfirm.addEventListener('click', confirmProductCreation);
   nodes.productModalCloseTargets.forEach((node) => {
     node.addEventListener('click', () => closeProductFormModal());
+  });
+  nodes.categoryModalCloseTargets.forEach((node) => {
+    node.addEventListener('click', closeCategoryFormModal);
   });
   nodes.modalCloseTargets.forEach((node) => {
     node.addEventListener('click', closeProductConfirmModal);
@@ -179,6 +191,11 @@ function bindEvents() {
   nodes.txFilterCategory.addEventListener('input', debounce(loadTransactions, 220));
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') {
+      return;
+    }
+
+    if (nodes.categoryFormModal.classList.contains('is-open')) {
+      closeCategoryFormModal();
       return;
     }
 
@@ -361,10 +378,12 @@ async function loadStats() {
 async function loadCategories() {
   state.categories = await request('/api/categories');
   renderCategories();
+  renderStats();
 }
 
 async function loadProducts() {
   state.products = await request('/api/products');
+  renderCategories();
   renderProducts();
   renderMovementBuilder();
   syncTopMetrics();
@@ -496,22 +515,55 @@ function renderTreasurySummary() {
 }
 
 function renderCategories() {
-  const current = nodes.categoryFilter.value;
-  nodes.categoryFilter.innerHTML = '<option value="">Todos los rubros</option>';
-  nodes.categoryOptions.innerHTML = '';
+  const currentFilter = nodes.categoryFilter.value;
+  const currentProductCategory = nodes.productCategory.value;
+  const categoryNames = collectCategoryNames();
 
-  state.categories.forEach((category) => {
+  nodes.categoryFilter.innerHTML = '<option value="">Todos los rubros</option>';
+  nodes.productCategory.innerHTML = `<option value="">${categoryNames.length ? 'Seleccionar categoria' : 'Primero crea una categoria'}</option>`;
+
+  categoryNames.forEach((categoryName) => {
     const option = document.createElement('option');
-    option.value = category.name;
-    option.textContent = category.name;
+    option.value = categoryName;
+    option.textContent = categoryName;
     nodes.categoryFilter.append(option);
 
-    const dataOption = document.createElement('option');
-    dataOption.value = category.name;
-    nodes.categoryOptions.append(dataOption);
+    const productOption = document.createElement('option');
+    productOption.value = categoryName;
+    productOption.textContent = categoryName;
+    nodes.productCategory.append(productOption);
   });
 
-  nodes.categoryFilter.value = current;
+  nodes.categoryFilter.value = categoryNames.includes(currentFilter) ? currentFilter : '';
+  nodes.productCategory.value = categoryNames.includes(currentProductCategory) ? currentProductCategory : '';
+}
+
+function collectCategoryNames() {
+  const namesByKey = new Map();
+
+  state.categories.forEach((category) => {
+    const name = String(category?.name || '').trim();
+    const key = normalizeCategoryKey(name);
+
+    if (key && !namesByKey.has(key)) {
+      namesByKey.set(key, name);
+    }
+  });
+
+  state.products.forEach((product) => {
+    const name = String(product?.category || '').trim();
+    const key = normalizeCategoryKey(name);
+
+    if (key && !namesByKey.has(key)) {
+      namesByKey.set(key, name);
+    }
+  });
+
+  return [...namesByKey.values()].sort((left, right) => left.localeCompare(right, 'es', { sensitivity: 'base' }));
+}
+
+function normalizeCategoryKey(value) {
+  return String(value || '').trim().toLowerCase();
 }
 
 function renderProducts() {
@@ -916,10 +968,99 @@ function openProductFormModal() {
 }
 
 function closeProductFormModal() {
+  if (nodes.categoryFormModal.classList.contains('is-open')) {
+    closeCategoryFormModal();
+  }
+
   nodes.productFormModal.classList.remove('is-open');
   nodes.productFormModal.setAttribute('aria-hidden', 'true');
   resetProductForm();
   syncModalBodyState();
+}
+
+function resetCategoryForm() {
+  nodes.categoryForm.reset();
+}
+
+function openCategoryFormModal() {
+  resetCategoryForm();
+  nodes.categoryFormModal.classList.add('is-open');
+  nodes.categoryFormModal.setAttribute('aria-hidden', 'false');
+  syncModalBodyState();
+  window.requestAnimationFrame(() => {
+    nodes.categoryName.focus();
+  });
+}
+
+function closeCategoryFormModal() {
+  nodes.categoryFormModal.classList.remove('is-open');
+  nodes.categoryFormModal.setAttribute('aria-hidden', 'true');
+  resetCategoryForm();
+  syncModalBodyState();
+}
+
+async function saveCategory(event) {
+  event.preventDefault();
+
+  const name = nodes.categoryName.value.trim();
+  const description = nodes.categoryDescription.value.trim();
+
+  if (!name) {
+    window.alert('El nombre de la categoria es obligatorio.');
+    nodes.categoryName.focus();
+    return;
+  }
+
+  const category = await createCategory({ name, description });
+  const productFormWasOpen = nodes.productFormModal.classList.contains('is-open');
+
+  await loadCategories();
+  closeCategoryFormModal();
+
+  if (productFormWasOpen) {
+    nodes.productCategory.value = category.name;
+    nodes.productCategory.focus();
+  }
+
+  window.alert(
+    category.existed
+      ? `La categoria ${category.name} ya existia y quedo disponible para usar.`
+      : `Categoria ${category.name} creada correctamente.`
+  );
+}
+
+async function createCategory(payload) {
+  const response = await authorizedFetch('/api/categories', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (response.status === 401) {
+    clearSession();
+    showAuthShell('La sesion vencio. Volve a iniciar sesion.');
+    throw new Error('Unauthorized');
+  }
+
+  const body = await readResponseBody(response);
+
+  if (response.status === 409 && body?.category) {
+    return {
+      ...body.category,
+      existed: true
+    };
+  }
+
+  if (!response.ok) {
+    const message = body?.error || response.statusText || 'No se pudo crear la categoria.';
+    window.alert(message);
+    throw new Error(message);
+  }
+
+  return {
+    ...(body || {}),
+    existed: false
+  };
 }
 
 async function saveProduct(event) {
@@ -1135,7 +1276,9 @@ async function deleteProduct(id) {
 
 function syncModalBodyState() {
   const hasOpenModal =
-    nodes.productConfirmModal.classList.contains('is-open') || nodes.productFormModal.classList.contains('is-open');
+    nodes.productConfirmModal.classList.contains('is-open') ||
+    nodes.productFormModal.classList.contains('is-open') ||
+    nodes.categoryFormModal.classList.contains('is-open');
   document.body.classList.toggle('modal-open', hasOpenModal);
 }
 
@@ -1162,15 +1305,8 @@ async function request(url, options) {
   }
 
   if (!response.ok) {
-    let message = 'Request failed';
-    try {
-      const body = await response.json();
-      if (body?.error) {
-        message = body.error;
-      }
-    } catch (error) {
-      message = response.statusText || message;
-    }
+    const body = await readResponseBody(response);
+    const message = body?.error || response.statusText || 'Request failed';
     window.alert(message);
     throw new Error(message);
   }
@@ -1180,6 +1316,14 @@ async function request(url, options) {
   }
 
   return response.json();
+}
+
+async function readResponseBody(response) {
+  try {
+    return await response.json();
+  } catch (error) {
+    return null;
+  }
 }
 
 function authorizedFetch(url, options = {}) {

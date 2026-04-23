@@ -1,0 +1,7 @@
+34305	ALMENDRAS 500gr	ALMENDRAS 500gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/afb98e0e33171937a96e1451a539c88d.png
+34306	NUECES 500gr	NUECES 500gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/087d481f23ac9b926a53d78245625ffb.png
+34307	CASTAÑAS DE CAJU TOSTADAS 500gr	CASTANAS DE CAJU TOSTADAS 500gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/3691c96fd4f75e003e667d15a04150dd.png
+34308	PISTACHOS SALADOS 500gr	PISTACHOS SALADOS 500gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/d4c486912bd53bd75bdec06889c6f5f5.png
+34309	CASTAÑAS DE PARA 500gr	CASTANAS DE PARA 500gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/38e58221d254ce553ab51e4834171117.png
+45938	Dátiles Medjoul 500gr	Datiles Medjoul 500gr.jpeg	https://fiweex.com/sistema/img/img_catalogo_producto/big/cbfffdb121e3b4c631f3c71c665106e2.jpeg
+54034	Chips de Coco Natural 500gr	Chips de Coco Natural 500gr.png	https://fiweex.com/sistema/img/img_catalogo_producto/big/2989ab09d25ce1d9f6b5168a63381fee.png
