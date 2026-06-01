@@ -18,7 +18,7 @@ const port = Number(process.env.PORT || 4010);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicDir = path.resolve(__dirname, '../public');
-const assetDir = path.resolve(__dirname, '../img');
+const assetDir = process.env.VERCEL ? '/tmp' : path.resolve(__dirname, '../img');
 
 fs.mkdirSync(assetDir, { recursive: true });
 
@@ -1238,13 +1238,20 @@ function groupMovementRows(rows) {
   });
 }
 
-ensureSchema()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`Stockmanager listening on http://localhost:${port}`);
+// Vercel: export app as serverless handler
+export default app;
+
+if (!process.env.VERCEL) {
+  ensureSchema()
+    .then(() => {
+      app.listen(port, () => {
+        console.log(`Stockmanager listening on http://localhost:${port}`);
+      });
+    })
+    .catch((error) => {
+      console.error('Failed to initialize application:', error);
+      process.exit(1);
     });
-  })
-  .catch((error) => {
-    console.error('Failed to initialize application:', error);
-    process.exit(1);
-  });
+} else {
+  ensureSchema().catch((err) => console.error('Schema init failed:', err.message));
+}
