@@ -595,10 +595,23 @@
               <input id="product-stock" type="number" min="0" step="1" required />
             </label>
           </div>
-          <label>
-            <span>Foto del repuesto</span>
+          <div class="image-field-group">
+            <span class="image-field-label">Foto del repuesto</span>
+            <div id="image-drop-zone" class="image-drop-zone">
+              <img id="image-preview" class="image-preview-img" hidden alt="" />
+              <div id="image-drop-placeholder" class="image-drop-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <p>Arrastra una imagen aqui</p>
+                <p class="image-drop-sub">o <button type="button" id="image-browse-btn" class="image-browse-btn">elegir archivo</button></p>
+              </div>
+              <div id="image-upload-status" class="image-upload-status" hidden>
+                <span id="image-upload-text">Subiendo...</span>
+              </div>
+              <button type="button" id="image-clear-btn" class="image-clear-btn" title="Quitar foto">&#x2715;</button>
+              <input id="image-file-input" type="file" accept="image/*" hidden />
+            </div>
             <input id="product-image" type="text" placeholder="/assets/... , assets/... o https://..." spellcheck="false" />
-          </label>
+          </div>
           <label class="checkbox-row">
             <input id="product-featured" type="checkbox" />
             <span>Mostrar en Pasos Saludables</span>

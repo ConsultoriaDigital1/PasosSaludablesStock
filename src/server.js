@@ -3,8 +3,13 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import { readBearerToken, readHeaderValue, safeEqual, signJwt, verifyJwt } from './auth.js';
 import { ensureSchema, mapCategory, mapMovement, mapProduct, mapTransaction, sql } from './db.js';
+
+const require = createRequire(import.meta.url);
+const multer = require('multer');
 
 dotenv.config();
 
@@ -14,6 +19,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicDir = path.resolve(__dirname, '../public');
 const assetDir = path.resolve(__dirname, '../img');
+
+fs.mkdirSync(assetDir, { recursive: true });
+
+const imageUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, assetDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+      cb(null, `img-${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`);
+    }
+  }),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten imagenes'));
+    }
+  }
+});
 const authUsername = process.env.AUTH_USERNAME || 'pasossaludables';
 const authPassword = process.env.AUTH_PASSWORD || 'pelusa50';
 const jwtSecret = process.env.JWT_SECRET || 'stockmanager-change-this-secret';
@@ -90,6 +115,18 @@ app.use('/api', (req, res, next) => {
   } catch (error) {
     return res.status(401).json({ error: 'Sesion invalida o vencida' });
   }
+});
+
+app.post('/api/upload/image', (req, res) => {
+  imageUpload.single('image')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se recibio ninguna imagen' });
+    }
+    return res.json({ url: `/assets/${req.file.filename}` });
+  });
 });
 
 app.get('/api/auth/session', (req, res) => {
