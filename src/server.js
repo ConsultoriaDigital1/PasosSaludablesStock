@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import { put } from '@vercel/blob';
 import { readBearerToken, readHeaderValue, safeEqual, signJwt, verifyJwt } from './auth.js';
 import { ensureSchema, mapCategory, mapMovement, mapProduct, mapTransaction, sql } from './db.js';
 
@@ -23,13 +24,7 @@ const assetDir = process.env.VERCEL ? '/tmp' : path.resolve(__dirname, '../img')
 fs.mkdirSync(assetDir, { recursive: true });
 
 const imageUpload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, assetDir),
-    filename: (_req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-      cb(null, `img-${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`);
-    }
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -118,14 +113,29 @@ app.use('/api', (req, res, next) => {
 });
 
 app.post('/api/upload/image', (req, res) => {
-  imageUpload.single('image')(req, res, (err) => {
+  imageUpload.single('image')(req, res, async (err) => {
     if (err) {
       return res.status(400).json({ error: err.message });
     }
     if (!req.file) {
       return res.status(400).json({ error: 'No se recibio ninguna imagen' });
     }
-    return res.json({ url: `/assets/${req.file.filename}` });
+
+    const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+    const filename = `img-${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`;
+
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const blob = await put(filename, req.file.buffer, { access: 'public' });
+        return res.json({ url: blob.url });
+      } catch (uploadErr) {
+        return res.status(500).json({ error: 'Error al subir la imagen al storage' });
+      }
+    }
+
+    const filepath = path.join(assetDir, filename);
+    fs.writeFileSync(filepath, req.file.buffer);
+    return res.json({ url: `/assets/${filename}` });
   });
 });
 
